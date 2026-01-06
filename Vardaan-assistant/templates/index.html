@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vardaan Assistant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --panel:#050509;
+  --border:rgba(148,163,184,.3);
+  --gold:#facc15;
+  --gold-soft:rgba(250,204,21,.15);
+  --text:#f9fafb;
+  --muted:#9ca3af;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
+
+body{
+  height:100vh;
+  background:radial-gradient(circle at top,#111827,#020617 60%,#000);
+  color:var(--text);
+  overflow:hidden;
+}
+
+.app{
+  height:100vh;
+  max-width:480px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  border-right:1px solid var(--border);
+}
+
+/* HEADER */
+.header{
+  padding:14px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+
+.title{
+  letter-spacing:.25em;
+  font-size:15px;
+  font-weight:600;
+}
+.title span{color:var(--gold)}
+
+.subtitle{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.new-chat{
+  position:absolute;
+  right:12px;
+  top:12px;
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:var(--gold-soft);
+  border:1px solid rgba(250,204,21,.7);
+  color:#fef3c7;
+  cursor:pointer;
+}
+
+/* CHAT */
+.chat{
+  flex:1;
+  overflow-y:auto;
+  padding:14px 12px 140px;
+}
+
+.chat::-webkit-scrollbar{width:4px}
+.chat::-webkit-scrollbar-thumb{
+  background:rgba(148,163,184,.6);
+  border-radius:999px;
+}
+
+.message{
+  max-width:85%;
+  padding:10px 14px;
+  border-radius:14px;
+  margin-bottom:10px;
+  font-size:13px;
+  line-height:1.45;
+  white-space:pre-wrap;
+}
+
+.user{
+  margin-left:auto;
+  background:linear-gradient(135deg,#f97316,var(--gold));
+  color:#111827;
+  border-bottom-right-radius:5px;
+}
+
+.bot{
+  background:#020617;
+  border:1px solid var(--border);
+  border-bottom-left-radius:5px;
+}
+
+.meta{
+  margin-top:4px;
+  font-size:10px;
+  color:var(--muted);
+}
+
+/* INPUT BAR */
+.input-bar{
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:480px;
+  background:#050509;
+  border-top:1px solid var(--border);
+  padding:10px;
+  display:flex;
+  gap:8px;
+  z-index:999;
+}
+
+textarea{
+  flex:1;
+  resize:none;
+  border-radius:999px;
+  padding:10px 14px;
+  background:#020617;
+  color:var(--text);
+  border:1px solid var(--border);
+  font-size:13px;
+  outline:none;
+}
+
+textarea::placeholder{color:var(--muted)}
+
+button{
+  border:none;
+  border-radius:999px;
+  cursor:pointer;
+  flex-shrink:0;
+}
+
+/* MIC */
+.mic{
+  width:42px;
+  height:42px;
+  font-size:18px;
+  background:#020617;
+  color:#e5e7eb;
+  border:1px solid var(--border);
+}
+
+.mic.recording{
+  border-color:#ef4444;
+  box-shadow:0 0 0 0 rgba(239,68,68,.7),
+             0 0 18px rgba(239,68,68,.9);
+  animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(239,68,68,.7)}
+  70%{box-shadow:0 0 0 10px rgba(239,68,68,0)}
+  100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+}
+
+/* STOP */
+.stop{
+  width:42px;
+  height:42px;
+  font-size:16px;
+  background:rgba(239,68,68,.12);
+  color:#fecaca;
+  border:1px solid rgba(239,68,68,.9);
+}
+
+/* SEND */
+.send{
+  width:46px;
+  font-size:16px;
+  background:linear-gradient(135deg,#f97316,var(--gold));
+  color:#111827;
+  font-weight:700;
+}
+
+/* DESKTOP */
+@media(min-width:768px){
+  .app{
+    max-width:900px;
+    height:calc(100vh - 40px);
+    margin-top:20px;
+    border-radius:18px;
+  }
+  .input-bar{max-width:900px}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <div class="header">
+    <button class="new-chat" id="newChat">New Chat</button>
+    <div class="title"><span>VARDAAN</span> ASSISTANT</div>
+    <div class="subtitle">Your personal AI assistant</div>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="message bot">
+      Hello 👋  
+      I’m <strong>Vardaan</strong>. How can I help you today?
+      <div class="meta">Vardaan • now</div>
+    </div>
+  </div>
+
+  <div class="input-bar">
+    <button class="mic" id="mic">🎙️</button>
+    <textarea id="input" rows="1" placeholder="Type or speak…"></textarea>
+    <button class="stop" id="stopVoice">⏹</button>
+    <button class="send" id="send">➤</button>
+  </div>
+
+</div>
+
+<script>
+const chat=document.getElementById("chat");
+const input=document.getElementById("input");
+const send=document.getElementById("send");
+const mic=document.getElementById("mic");
+const stopVoice=document.getElementById("stopVoice");
+const newChat=document.getElementById("newChat");
+
+/* 🔊 Voice reply only when mic used */
+let voiceReplyEnabled = false;
+
+/* ADD MESSAGE */
+function addMessage(text,who){
+  const m=document.createElement("div");
+  m.className="message "+who;
+  m.innerHTML=text.replace(/\n/g,"<br>");
+  const meta=document.createElement("div");
+  meta.className="meta";
+  meta.textContent=who==="user"?"You":"Vardaan";
+  m.appendChild(meta);
+  chat.appendChild(m);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+/* SPEAK */
+function speak(text){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="en-IN";
+  u.rate=1;
+  speechSynthesis.speak(u);
+}
+
+/* SEND MESSAGE */
+async function sendMessage(){
+  speechSynthesis.cancel();
+
+  const text=input.value.trim();
+  if(!text) return;
+
+  addMessage(text,"user");
+  input.value="";
+
+  const res=await fetch("/api/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:text})
+  });
+
+  const data=await res.json();
+  const reply=data.reply||"No reply";
+  addMessage(reply,"bot");
+
+  if(voiceReplyEnabled){
+    speak(reply);
+    voiceReplyEnabled=false;
+  }
+}
+
+send.onclick=sendMessage;
+
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+/* typing = no voice */
+input.addEventListener("input",()=>{
+  voiceReplyEnabled=false;
+});
+
+/* STOP SPEAKING */
+stopVoice.onclick=()=>speechSynthesis.cancel();
+
+/* SPEECH TO TEXT */
+let recognition=null,recording=false;
+if("webkitSpeechRecognition"in window||"SpeechRecognition"in window){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();
+  recognition.lang="en-IN";
+
+  recognition.onstart=()=>{
+    recording=true;
+    mic.classList.add("recording");
+  };
+
+  recognition.onend=()=>{
+    recording=false;
+    mic.classList.remove("recording");
+  };
+
+  recognition.onresult=e=>{
+    voiceReplyEnabled=true; // 🔊 enable voice reply ONLY for mic
+    input.value=e.results[0][0].transcript;
+    sendMessage();
+  };
+}
+
+mic.onclick=()=>{
+  if(!recognition) return alert("Voice not supported");
+  recording?recognition.stop():recognition.start();
+};
+
+/* NEW CHAT */
+newChat.onclick=()=>{
+  speechSynthesis.cancel();
+  voiceReplyEnabled=false;
+  chat.innerHTML=`
+    <div class="message bot">
+      Hello 👋  
+      I’m <strong>Vardaan</strong>. How can I help you today?
+      <div class="meta">Vardaan • now</div>
+    </div>`;
+};
+</script>
+</body>
+</html>
